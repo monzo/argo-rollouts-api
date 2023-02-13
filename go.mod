@@ -5,9 +5,9 @@ go 1.19
 require (
 	github.com/go-openapi/spec v0.19.3
 	github.com/stretchr/testify v1.7.0
-	k8s.io/api v0.20.4
-	k8s.io/apimachinery v0.20.4
-	k8s.io/client-go v0.20.4
+	k8s.io/api v0.18.0-alpha.2
+	k8s.io/apimachinery v0.18.0-alpha.2
+	k8s.io/client-go v0.18.0-alpha.2
 	k8s.io/kube-openapi v0.0.0-20210216185858-15cd8face8d6
 )
 
@@ -18,11 +18,11 @@ require (
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
-	github.com/go-openapi/swag v0.21.1 // indirect
+	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/google/gofuzz v1.2.0 // indirect
+	github.com/google/gofuzz v1.0.0 // indirect
 	github.com/googleapis/gnostic v0.4.1 // indirect
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect

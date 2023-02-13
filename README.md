@@ -15,7 +15,11 @@ To update the API definitions (e.g. from a newer release of Argo Rollouts), you 
     ```shell
     $ rm -fr ./pkg/apis/rollout/validation
     ```
-4. Raise a PR with the changes, get it merged, and tag a new release with version number.
+4. Raise a PR with the changes to monzo/argo-rollouts-api, get it merged
+5. In all other projects where you want to add this as a dependency, add a go mod replace directive:
+   ```shell
+   go mod edit -replace github.com/argoproj/argo-rollouts=github.com/monzo/argo-rollouts-api@$merge-commit-sha
+   ```
 
 
 

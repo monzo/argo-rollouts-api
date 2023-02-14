@@ -25,6 +25,7 @@ import (
 	v1alpha1 "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1"
 	scheme "github.com/argoproj/argo-rollouts/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
 )
@@ -45,6 +46,7 @@ type AnalysisRunInterface interface {
 	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.AnalysisRun, error)
 	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.AnalysisRunList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.AnalysisRun, err error)
 	AnalysisRunExpansion
 }
 
@@ -70,7 +72,7 @@ func (c *analysisRuns) Get(ctx context.Context, name string, options v1.GetOptio
 		Resource("analysisruns").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -87,7 +89,7 @@ func (c *analysisRuns) List(ctx context.Context, opts v1.ListOptions) (result *v
 		Resource("analysisruns").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -104,7 +106,7 @@ func (c *analysisRuns) Watch(ctx context.Context, opts v1.ListOptions) (watch.In
 		Resource("analysisruns").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Watch()
+		Watch(ctx)
 }
 
 // Create takes the representation of a analysisRun and creates it.  Returns the server's representation of the analysisRun, and an error, if there is any.
@@ -115,7 +117,7 @@ func (c *analysisRuns) Create(ctx context.Context, analysisRun *v1alpha1.Analysi
 		Resource("analysisruns").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(analysisRun).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -129,7 +131,7 @@ func (c *analysisRuns) Update(ctx context.Context, analysisRun *v1alpha1.Analysi
 		Name(analysisRun.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(analysisRun).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -145,7 +147,7 @@ func (c *analysisRuns) UpdateStatus(ctx context.Context, analysisRun *v1alpha1.A
 		SubResource("status").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(analysisRun).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -157,7 +159,7 @@ func (c *analysisRuns) Delete(ctx context.Context, name string, opts v1.DeleteOp
 		Resource("analysisruns").
 		Name(name).
 		Body(&opts).
-		Do().
+		Do(ctx).
 		Error()
 }
 
@@ -173,6 +175,21 @@ func (c *analysisRuns) DeleteCollection(ctx context.Context, opts v1.DeleteOptio
 		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(&opts).
-		Do().
+		Do(ctx).
 		Error()
+}
+
+// Patch applies the patch and returns the patched analysisRun.
+func (c *analysisRuns) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.AnalysisRun, err error) {
+	result = &v1alpha1.AnalysisRun{}
+	err = c.client.Patch(pt).
+		Namespace(c.ns).
+		Resource("analysisruns").
+		Name(name).
+		SubResource(subresources...).
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Body(data).
+		Do(ctx).
+		Into(result)
+	return
 }

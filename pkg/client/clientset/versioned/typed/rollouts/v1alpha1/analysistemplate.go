@@ -25,6 +25,7 @@ import (
 	v1alpha1 "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1"
 	scheme "github.com/argoproj/argo-rollouts/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
 )
@@ -44,6 +45,7 @@ type AnalysisTemplateInterface interface {
 	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.AnalysisTemplate, error)
 	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.AnalysisTemplateList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.AnalysisTemplate, err error)
 	AnalysisTemplateExpansion
 }
 
@@ -69,7 +71,7 @@ func (c *analysisTemplates) Get(ctx context.Context, name string, options v1.Get
 		Resource("analysistemplates").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -86,7 +88,7 @@ func (c *analysisTemplates) List(ctx context.Context, opts v1.ListOptions) (resu
 		Resource("analysistemplates").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -103,7 +105,7 @@ func (c *analysisTemplates) Watch(ctx context.Context, opts v1.ListOptions) (wat
 		Resource("analysistemplates").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Watch()
+		Watch(ctx)
 }
 
 // Create takes the representation of a analysisTemplate and creates it.  Returns the server's representation of the analysisTemplate, and an error, if there is any.
@@ -114,7 +116,7 @@ func (c *analysisTemplates) Create(ctx context.Context, analysisTemplate *v1alph
 		Resource("analysistemplates").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(analysisTemplate).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -128,7 +130,7 @@ func (c *analysisTemplates) Update(ctx context.Context, analysisTemplate *v1alph
 		Name(analysisTemplate.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(analysisTemplate).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -140,7 +142,7 @@ func (c *analysisTemplates) Delete(ctx context.Context, name string, opts v1.Del
 		Resource("analysistemplates").
 		Name(name).
 		Body(&opts).
-		Do().
+		Do(ctx).
 		Error()
 }
 
@@ -156,6 +158,21 @@ func (c *analysisTemplates) DeleteCollection(ctx context.Context, opts v1.Delete
 		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(&opts).
-		Do().
+		Do(ctx).
 		Error()
+}
+
+// Patch applies the patch and returns the patched analysisTemplate.
+func (c *analysisTemplates) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.AnalysisTemplate, err error) {
+	result = &v1alpha1.AnalysisTemplate{}
+	err = c.client.Patch(pt).
+		Namespace(c.ns).
+		Resource("analysistemplates").
+		Name(name).
+		SubResource(subresources...).
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Body(data).
+		Do(ctx).
+		Into(result)
+	return
 }

@@ -25,6 +25,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
+	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
 )
@@ -127,4 +128,15 @@ func (c *FakeExperiments) DeleteCollection(ctx context.Context, opts v1.DeleteOp
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.ExperimentList{})
 	return err
+}
+
+// Patch applies the patch and returns the patched experiment.
+func (c *FakeExperiments) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Experiment, err error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewPatchSubresourceAction(experimentsResource, c.ns, name, pt, data, subresources...), &v1alpha1.Experiment{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*v1alpha1.Experiment), err
 }

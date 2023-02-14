@@ -25,6 +25,7 @@ import (
 	v1alpha1 "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1"
 	scheme "github.com/argoproj/argo-rollouts/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
 )
@@ -45,6 +46,7 @@ type RolloutInterface interface {
 	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.Rollout, error)
 	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.RolloutList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Rollout, err error)
 	RolloutExpansion
 }
 
@@ -70,7 +72,7 @@ func (c *rollouts) Get(ctx context.Context, name string, options v1.GetOptions) 
 		Resource("rollouts").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -87,7 +89,7 @@ func (c *rollouts) List(ctx context.Context, opts v1.ListOptions) (result *v1alp
 		Resource("rollouts").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -104,7 +106,7 @@ func (c *rollouts) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interf
 		Resource("rollouts").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Watch()
+		Watch(ctx)
 }
 
 // Create takes the representation of a rollout and creates it.  Returns the server's representation of the rollout, and an error, if there is any.
@@ -113,8 +115,9 @@ func (c *rollouts) Create(ctx context.Context, rollout *v1alpha1.Rollout, opts v
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("rollouts").
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(rollout).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -128,7 +131,7 @@ func (c *rollouts) Update(ctx context.Context, rollout *v1alpha1.Rollout, opts v
 		Name(rollout.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(rollout).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -144,7 +147,7 @@ func (c *rollouts) UpdateStatus(ctx context.Context, rollout *v1alpha1.Rollout, 
 		SubResource("status").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(rollout).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -156,7 +159,7 @@ func (c *rollouts) Delete(ctx context.Context, name string, opts v1.DeleteOption
 		Resource("rollouts").
 		Name(name).
 		Body(&opts).
-		Do().
+		Do(ctx).
 		Error()
 }
 
@@ -172,6 +175,21 @@ func (c *rollouts) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, 
 		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(&opts).
-		Do().
+		Do(ctx).
 		Error()
+}
+
+// Patch applies the patch and returns the patched rollout.
+func (c *rollouts) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Rollout, err error) {
+	result = &v1alpha1.Rollout{}
+	err = c.client.Patch(pt).
+		Namespace(c.ns).
+		Resource("rollouts").
+		Name(name).
+		SubResource(subresources...).
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Body(data).
+		Do(ctx).
+		Into(result)
+	return
 }

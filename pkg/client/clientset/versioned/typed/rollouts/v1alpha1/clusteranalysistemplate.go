@@ -25,6 +25,7 @@ import (
 	v1alpha1 "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1"
 	scheme "github.com/argoproj/argo-rollouts/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
 )
@@ -44,6 +45,7 @@ type ClusterAnalysisTemplateInterface interface {
 	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.ClusterAnalysisTemplate, error)
 	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.ClusterAnalysisTemplateList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ClusterAnalysisTemplate, err error)
 	ClusterAnalysisTemplateExpansion
 }
 
@@ -66,7 +68,7 @@ func (c *clusterAnalysisTemplates) Get(ctx context.Context, name string, options
 		Resource("clusteranalysistemplates").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -82,7 +84,7 @@ func (c *clusterAnalysisTemplates) List(ctx context.Context, opts v1.ListOptions
 		Resource("clusteranalysistemplates").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -98,7 +100,7 @@ func (c *clusterAnalysisTemplates) Watch(ctx context.Context, opts v1.ListOption
 		Resource("clusteranalysistemplates").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Watch()
+		Watch(ctx)
 }
 
 // Create takes the representation of a clusterAnalysisTemplate and creates it.  Returns the server's representation of the clusterAnalysisTemplate, and an error, if there is any.
@@ -108,7 +110,7 @@ func (c *clusterAnalysisTemplates) Create(ctx context.Context, clusterAnalysisTe
 		Resource("clusteranalysistemplates").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(clusterAnalysisTemplate).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -121,7 +123,7 @@ func (c *clusterAnalysisTemplates) Update(ctx context.Context, clusterAnalysisTe
 		Name(clusterAnalysisTemplate.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(clusterAnalysisTemplate).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -132,7 +134,7 @@ func (c *clusterAnalysisTemplates) Delete(ctx context.Context, name string, opts
 		Resource("clusteranalysistemplates").
 		Name(name).
 		Body(&opts).
-		Do().
+		Do(ctx).
 		Error()
 }
 
@@ -147,6 +149,20 @@ func (c *clusterAnalysisTemplates) DeleteCollection(ctx context.Context, opts v1
 		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(&opts).
-		Do().
+		Do(ctx).
 		Error()
+}
+
+// Patch applies the patch and returns the patched clusterAnalysisTemplate.
+func (c *clusterAnalysisTemplates) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ClusterAnalysisTemplate, err error) {
+	result = &v1alpha1.ClusterAnalysisTemplate{}
+	err = c.client.Patch(pt).
+		Resource("clusteranalysistemplates").
+		Name(name).
+		SubResource(subresources...).
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Body(data).
+		Do(ctx).
+		Into(result)
+	return
 }

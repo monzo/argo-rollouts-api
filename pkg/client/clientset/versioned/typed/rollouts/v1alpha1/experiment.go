@@ -25,6 +25,7 @@ import (
 	v1alpha1 "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1"
 	scheme "github.com/argoproj/argo-rollouts/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
 )
@@ -45,6 +46,7 @@ type ExperimentInterface interface {
 	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.Experiment, error)
 	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.ExperimentList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Experiment, err error)
 	ExperimentExpansion
 }
 
@@ -70,7 +72,7 @@ func (c *experiments) Get(ctx context.Context, name string, options v1.GetOption
 		Resource("experiments").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -87,7 +89,7 @@ func (c *experiments) List(ctx context.Context, opts v1.ListOptions) (result *v1
 		Resource("experiments").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -104,7 +106,7 @@ func (c *experiments) Watch(ctx context.Context, opts v1.ListOptions) (watch.Int
 		Resource("experiments").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Watch()
+		Watch(ctx)
 }
 
 // Create takes the representation of a experiment and creates it.  Returns the server's representation of the experiment, and an error, if there is any.
@@ -115,7 +117,7 @@ func (c *experiments) Create(ctx context.Context, experiment *v1alpha1.Experimen
 		Resource("experiments").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(experiment).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -129,7 +131,7 @@ func (c *experiments) Update(ctx context.Context, experiment *v1alpha1.Experimen
 		Name(experiment.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(experiment).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -145,7 +147,7 @@ func (c *experiments) UpdateStatus(ctx context.Context, experiment *v1alpha1.Exp
 		SubResource("status").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(experiment).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
@@ -157,7 +159,7 @@ func (c *experiments) Delete(ctx context.Context, name string, opts v1.DeleteOpt
 		Resource("experiments").
 		Name(name).
 		Body(&opts).
-		Do().
+		Do(ctx).
 		Error()
 }
 
@@ -173,6 +175,21 @@ func (c *experiments) DeleteCollection(ctx context.Context, opts v1.DeleteOption
 		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(&opts).
-		Do().
+		Do(ctx).
 		Error()
+}
+
+// Patch applies the patch and returns the patched experiment.
+func (c *experiments) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Experiment, err error) {
+	result = &v1alpha1.Experiment{}
+	err = c.client.Patch(pt).
+		Namespace(c.ns).
+		Resource("experiments").
+		Name(name).
+		SubResource(subresources...).
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Body(data).
+		Do(ctx).
+		Into(result)
+	return
 }

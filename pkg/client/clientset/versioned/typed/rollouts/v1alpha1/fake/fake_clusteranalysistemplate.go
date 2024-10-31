@@ -24,7 +24,7 @@ import (
 	v1alpha1 "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
+	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
 )
@@ -34,9 +34,9 @@ type FakeClusterAnalysisTemplates struct {
 	Fake *FakeArgoprojV1alpha1
 }
 
-var clusteranalysistemplatesResource = schema.GroupVersionResource{Group: "argoproj.io", Version: "v1alpha1", Resource: "clusteranalysistemplates"}
+var clusteranalysistemplatesResource = v1alpha1.SchemeGroupVersion.WithResource("clusteranalysistemplates")
 
-var clusteranalysistemplatesKind = schema.GroupVersionKind{Group: "argoproj.io", Version: "v1alpha1", Kind: "ClusterAnalysisTemplate"}
+var clusteranalysistemplatesKind = v1alpha1.SchemeGroupVersion.WithKind("ClusterAnalysisTemplate")
 
 // Get takes name of the clusterAnalysisTemplate, and returns the corresponding clusterAnalysisTemplate object, and an error if there is any.
 func (c *FakeClusterAnalysisTemplates) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ClusterAnalysisTemplate, err error) {
@@ -98,7 +98,7 @@ func (c *FakeClusterAnalysisTemplates) Update(ctx context.Context, clusterAnalys
 // Delete takes name of the clusterAnalysisTemplate and deletes it. Returns an error if one occurs.
 func (c *FakeClusterAnalysisTemplates) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewRootDeleteAction(clusteranalysistemplatesResource, name), &v1alpha1.ClusterAnalysisTemplate{})
+		Invokes(testing.NewRootDeleteActionWithOptions(clusteranalysistemplatesResource, name, opts), &v1alpha1.ClusterAnalysisTemplate{})
 	return err
 }
 
@@ -108,4 +108,14 @@ func (c *FakeClusterAnalysisTemplates) DeleteCollection(ctx context.Context, opt
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.ClusterAnalysisTemplateList{})
 	return err
+}
+
+// Patch applies the patch and returns the patched clusterAnalysisTemplate.
+func (c *FakeClusterAnalysisTemplates) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ClusterAnalysisTemplate, err error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewRootPatchSubresourceAction(clusteranalysistemplatesResource, name, pt, data, subresources...), &v1alpha1.ClusterAnalysisTemplate{})
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*v1alpha1.ClusterAnalysisTemplate), err
 }

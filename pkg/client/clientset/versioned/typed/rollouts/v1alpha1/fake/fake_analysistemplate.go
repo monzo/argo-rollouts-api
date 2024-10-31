@@ -24,7 +24,7 @@ import (
 	v1alpha1 "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
+	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
 )
@@ -35,9 +35,9 @@ type FakeAnalysisTemplates struct {
 	ns   string
 }
 
-var analysistemplatesResource = schema.GroupVersionResource{Group: "argoproj.io", Version: "v1alpha1", Resource: "analysistemplates"}
+var analysistemplatesResource = v1alpha1.SchemeGroupVersion.WithResource("analysistemplates")
 
-var analysistemplatesKind = schema.GroupVersionKind{Group: "argoproj.io", Version: "v1alpha1", Kind: "AnalysisTemplate"}
+var analysistemplatesKind = v1alpha1.SchemeGroupVersion.WithKind("AnalysisTemplate")
 
 // Get takes name of the analysisTemplate, and returns the corresponding analysisTemplate object, and an error if there is any.
 func (c *FakeAnalysisTemplates) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.AnalysisTemplate, err error) {
@@ -104,7 +104,7 @@ func (c *FakeAnalysisTemplates) Update(ctx context.Context, analysisTemplate *v1
 // Delete takes name of the analysisTemplate and deletes it. Returns an error if one occurs.
 func (c *FakeAnalysisTemplates) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(analysistemplatesResource, c.ns, name), &v1alpha1.AnalysisTemplate{})
+		Invokes(testing.NewDeleteActionWithOptions(analysistemplatesResource, c.ns, name, opts), &v1alpha1.AnalysisTemplate{})
 
 	return err
 }
@@ -115,4 +115,15 @@ func (c *FakeAnalysisTemplates) DeleteCollection(ctx context.Context, opts v1.De
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.AnalysisTemplateList{})
 	return err
+}
+
+// Patch applies the patch and returns the patched analysisTemplate.
+func (c *FakeAnalysisTemplates) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.AnalysisTemplate, err error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewPatchSubresourceAction(analysistemplatesResource, c.ns, name, pt, data, subresources...), &v1alpha1.AnalysisTemplate{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*v1alpha1.AnalysisTemplate), err
 }

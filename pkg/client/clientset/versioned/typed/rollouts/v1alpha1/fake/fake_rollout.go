@@ -24,7 +24,7 @@ import (
 	v1alpha1 "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
+	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
 )
@@ -35,9 +35,9 @@ type FakeRollouts struct {
 	ns   string
 }
 
-var rolloutsResource = schema.GroupVersionResource{Group: "argoproj.io", Version: "v1alpha1", Resource: "rollouts"}
+var rolloutsResource = v1alpha1.SchemeGroupVersion.WithResource("rollouts")
 
-var rolloutsKind = schema.GroupVersionKind{Group: "argoproj.io", Version: "v1alpha1", Kind: "Rollout"}
+var rolloutsKind = v1alpha1.SchemeGroupVersion.WithKind("Rollout")
 
 // Get takes name of the rollout, and returns the corresponding rollout object, and an error if there is any.
 func (c *FakeRollouts) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Rollout, err error) {
@@ -116,7 +116,7 @@ func (c *FakeRollouts) UpdateStatus(ctx context.Context, rollout *v1alpha1.Rollo
 // Delete takes name of the rollout and deletes it. Returns an error if one occurs.
 func (c *FakeRollouts) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(rolloutsResource, c.ns, name), &v1alpha1.Rollout{})
+		Invokes(testing.NewDeleteActionWithOptions(rolloutsResource, c.ns, name, opts), &v1alpha1.Rollout{})
 
 	return err
 }
@@ -127,4 +127,15 @@ func (c *FakeRollouts) DeleteCollection(ctx context.Context, opts v1.DeleteOptio
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.RolloutList{})
 	return err
+}
+
+// Patch applies the patch and returns the patched rollout.
+func (c *FakeRollouts) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Rollout, err error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewPatchSubresourceAction(rolloutsResource, c.ns, name, pt, data, subresources...), &v1alpha1.Rollout{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*v1alpha1.Rollout), err
 }

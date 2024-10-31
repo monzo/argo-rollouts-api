@@ -24,7 +24,7 @@ import (
 	v1alpha1 "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
+	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
 )
@@ -35,9 +35,9 @@ type FakeExperiments struct {
 	ns   string
 }
 
-var experimentsResource = schema.GroupVersionResource{Group: "argoproj.io", Version: "v1alpha1", Resource: "experiments"}
+var experimentsResource = v1alpha1.SchemeGroupVersion.WithResource("experiments")
 
-var experimentsKind = schema.GroupVersionKind{Group: "argoproj.io", Version: "v1alpha1", Kind: "Experiment"}
+var experimentsKind = v1alpha1.SchemeGroupVersion.WithKind("Experiment")
 
 // Get takes name of the experiment, and returns the corresponding experiment object, and an error if there is any.
 func (c *FakeExperiments) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Experiment, err error) {
@@ -116,7 +116,7 @@ func (c *FakeExperiments) UpdateStatus(ctx context.Context, experiment *v1alpha1
 // Delete takes name of the experiment and deletes it. Returns an error if one occurs.
 func (c *FakeExperiments) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(experimentsResource, c.ns, name), &v1alpha1.Experiment{})
+		Invokes(testing.NewDeleteActionWithOptions(experimentsResource, c.ns, name, opts), &v1alpha1.Experiment{})
 
 	return err
 }
@@ -127,4 +127,15 @@ func (c *FakeExperiments) DeleteCollection(ctx context.Context, opts v1.DeleteOp
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.ExperimentList{})
 	return err
+}
+
+// Patch applies the patch and returns the patched experiment.
+func (c *FakeExperiments) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Experiment, err error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewPatchSubresourceAction(experimentsResource, c.ns, name, pt, data, subresources...), &v1alpha1.Experiment{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*v1alpha1.Experiment), err
 }

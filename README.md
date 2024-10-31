@@ -9,14 +9,14 @@ To update the API definitions (e.g. from a newer release of Argo Rollouts), you 
 2. Copy the relevant packages over:
     ```shell
     $ cp -fr $argo_rollouts_folder/pkg/apis ./pkg
-    $ cp -fr $argo_rollouts_folder/pkg/clients ./pkg
+    $ cp -fr $argo_rollouts_folder/pkg/client ./pkg
     ```
 3. Delete the `validation` package as this has a dependency on `argo-rollouts` and we don't need it just for API object usages:
     ```shell
-    $ rm -fr ./pkg/apis/rollout/validation
+    $ rm -fr ./pkg/apis/rollouts/validation
     ```
 4. Raise a PR with the changes to monzo/argo-rollouts-api, get it merged
-5. In all other projects where you want to add this as a dependency, add a go mod replace directive:
+5. In all **other projects** where you want to add this as a dependency, add a go mod replace directive:
    ```shell
    go mod edit -replace github.com/argoproj/argo-rollouts=github.com/monzo/argo-rollouts-api@$merge-commit-sha
    ```
